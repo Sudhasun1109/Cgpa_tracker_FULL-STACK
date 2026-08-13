@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - CGPA Tracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-card wide">
+    <a class="brand" href="index.html">🎓 CGPA Tracker</a>
+    <h1>Create your account</h1>
+    <p>Start tracking your academic performance.</p>
+    <form id="registerForm" class="form-grid">
+      <label>Full Name<input id="name" required></label>
+      <label>Register Number<input id="registerNumber" required></label>
+      <label>Email<input id="email" type="email" required></label>
+      <label>Password<input id="password" type="password" minlength="6" required></label>
+      <label>College<input id="college"></label>
+      <label>Department<input id="department" placeholder="CSE"></label>
+      <button class="btn full" type="submit">Create Account</button>
+    </form>
+    <div id="message" class="message"></div>
+    <p class="center">Already registered? <a href="login.html">Login</a></p>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

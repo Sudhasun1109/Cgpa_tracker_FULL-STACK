@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - CGPA Tracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-card">
+    <a class="brand" href="index.html">🎓 CGPA Tracker</a>
+    <h1>Welcome back</h1>
+    <p>Login to continue tracking your academic progress.</p>
+    <form id="loginForm">
+      <label>Email<input id="email" type="email" required></label>
+      <label>Password<input id="password" type="password" required></label>
+      <button class="btn full" type="submit">Login</button>
+      
+    </form>
+    <div id="message" class="message"></div>
+    <p class="center">New student? <a href="register.html">Create an account</a></p>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

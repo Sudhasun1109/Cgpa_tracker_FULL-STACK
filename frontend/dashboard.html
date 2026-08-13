@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - CGPA Tracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="dashboard.html">🎓 CGPA Tracker</a>
+      <button id="logoutBtn" class="btn btn-outline">Logout</button>
+    </div>
+  </header>
+  <main class="container dashboard">
+    <section class="welcome">
+      <div>
+        <span class="badge">Dashboard</span>
+        <h1 id="welcome">Welcome!</h1>
+        <p id="profileText"></p>
+      </div>
+      <button id="addSemesterBtn" class="btn">+ Add Semester</button>
+    </section>
+
+    <section class="stats">
+      <div class="stat-card"><small>Current CGPA</small><strong id="cgpa">0.00</strong></div>
+      <div class="stat-card"><small>Total Credits</small><strong id="credits">0</strong></div>
+      <div class="stat-card"><small>Semesters</small><strong id="semesterCount">0</strong></div>
+      <div class="stat-card"><small>Best GPA</small><strong id="bestGpa">0.00</strong></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>CGPA Progress</h2><span id="status"></span></div>
+      <div id="chart" class="chart"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Your Semesters</h2></div>
+      <div id="semesters" class="semester-grid"></div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <button class="close" id="closeModal">×</button>
+      <h2>Add Semester</h2>
+      <form id="semesterForm">
+        <label>Semester Number
+          <input id="semesterNumber" type="number" min="1" max="12" required>
+        </label>
+        <label>Semester Name
+          <input id="semesterName" placeholder="Semester 1" required>
+        </label>
+        <button class="btn full" type="submit">Create Semester</button>
+      </form>
+      <div id="modalMessage" class="message"></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semester - CGPA Tracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="dashboard.html">🎓 CGPA Tracker</a>
+      <button id="logoutBtn" class="btn btn-outline">Logout</button>
+    </div>
+  </header>
+
+  <main class="container dashboard">
+    <section class="welcome">
+      <div>
+        <a href="dashboard.html" class="back">← Dashboard</a>
+        <h1 id="semesterTitle">Semester</h1>
+        <p>Add your subjects, credits and grades.</p>
+      </div>
+      <div class="semester-score">
+        <small>Semester GPA</small>
+        <strong id="gpa">0.00</strong>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Subjects</h2>
+        <button id="addSubjectBtn" class="btn">+ Add Subject</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Subject</th><th>Code</th><th>Credits</th><th>Grade</th><th>Point</th><th></th></tr></thead>
+          <tbody id="subjects"></tbody>
+        </table>
+      </div>
+      <div id="empty" class="empty">No subjects added yet.</div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <button class="close" id="closeModal">×</button>
+      <h2>Add Subject</h2>
+      <form id="subjectForm">
+        <label>Subject Name<input id="subjectName" required></label>
+        <label>Subject Code<input id="subjectCode"></label>
+        <label>Credits<input id="credits" type="number" min="1" max="10" step="0.5" required></label>
+        <label>Grade
+          <select id="grade" required>
+            <option value="">Select grade</option>
+            <option>O</option><option>A+</option><option>A</option><option>B+</option>
+            <option>B</option><option>C</option><option>P</option><option>F</option>
+          </select>
+        </label>
+        <button class="btn full" type="submit">Add Subject</button>
+      </form>
+      <div id="modalMessage" class="message"></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/semester.js"></script>
+</body>
+</html>
