@@ -11,7 +11,8 @@ const cgpaRoutes = require('./routes/cgpaRoutes');
 const app = express();
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '5000'
+  origin: true,
+  credentials: true
 }));
 
 app.use(express.json());
