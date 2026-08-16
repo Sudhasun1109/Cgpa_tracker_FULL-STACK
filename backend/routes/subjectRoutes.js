@@ -25,6 +25,9 @@ router.delete('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { subjectName, subjectCode, credits, grade } = req.body;
+        const { getGradePoint } = require('../utils/cgpaCalculator');
+        const normalizedGrade = grade.toUpperCase();
+        const gradePoint = getGradePoint(normalizedGrade);
         const subjectId = req.params.id;
         const userId = req.user.id;
 
@@ -52,20 +55,22 @@ router.put('/:id', async (req, res) => {
 
         // Update subject
         await pool.query(
-            `UPDATE subjects
-             SET subject_name = ?,
-                 subject_code = ?,
-                 credits = ?,
-                 grade = ?
-             WHERE id = ?`,
-            [
-                subjectName,
-                subjectCode,
-                credits,
-                grade,
-                subjectId
-            ]
-        );
+    `UPDATE subjects
+     SET subject_name = ?,
+         subject_code = ?,
+         credits = ?,
+         grade = ?,
+         grade_point = ?
+     WHERE id = ?`,
+    [
+        subjectName,
+        subjectCode || null,
+        credits,
+        normalizedGrade,
+        gradePoint,
+        subjectId
+    ]
+);
 
         res.json({
             message: 'Subject updated successfully'

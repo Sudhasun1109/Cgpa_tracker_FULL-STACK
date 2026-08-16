@@ -98,7 +98,7 @@ function editSubject(id) {
 
     cells[5].innerHTML = `
         <button class="small-btn danger"
-                onclick="loadSemesters()">
+                onclick="loadSemester()">
             Cancel
         </button>
     `;
