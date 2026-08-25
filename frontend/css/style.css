@@ -503,3 +503,84 @@ th
     outline: none;
     border-color: #2563eb;
 }
+
+/* ============================================================
+   MARK SHEETS
+   ============================================================ */
+
+.marksheet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+}
+
+.marksheet-card {
+    border: 1px solid #e8eaf0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.marksheet-thumb {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    cursor: pointer;
+    background: #f0f2f8;
+    display: block;
+    border-bottom: 1px solid #eef0f5;
+}
+
+.marksheet-body {
+    padding: 14px;
+}
+
+.marksheet-body h4 {
+    margin: 0 0 4px;
+    font-size: 15px;
+}
+
+.marksheet-body small {
+    color: #667085;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.marksheet-body .card-actions {
+    margin-top: 4px;
+}
+
+/* Upload preview inside the modal */
+.ms-preview {
+    margin: 4px 0 14px;
+}
+
+.ms-preview img {
+    width: 100%;
+    max-height: 240px;
+    object-fit: contain;
+    border-radius: 10px;
+    border: 1px solid #e2e5ee;
+    background: #f7f8fc;
+}
+
+/* Full-size image viewer */
+.viewer-card {
+    position: relative;
+    width: min(920px, 100%);
+    max-height: 90vh;
+    background: #fff;
+    border-radius: 16px;
+    padding: 46px 18px 18px;
+    overflow: auto;
+}
+
+.viewer-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+}

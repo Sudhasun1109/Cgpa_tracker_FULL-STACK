@@ -58,9 +58,51 @@ async function init() {
       total_credits DECIMAL(8,2) NOT NULL,
       total_semesters INT NOT NULL,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE KEY unique_user (user_id),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  // Mark sheets (grade sheet photos) uploaded by the student.
+  // The image is stored as a base64 data URL so it survives redeploys on
+  // hosts with an ephemeral disk (e.g. Render free tier).
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS marksheets (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      title VARCHAR(150) NOT NULL,
+      semester_number INT,
+      image_data LONGTEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // ---------------------------------------------------------------
+  // Migration for databases created before the unique key existed.
+  // Without a UNIQUE key on user_id, the ON DUPLICATE KEY UPDATE in
+  // /api/cgpa never fires and a new row is inserted on every request.
+  // This adds the key once; it's safe to ignore if it already exists.
+  // ---------------------------------------------------------------
+  try {
+    // Remove any duplicate cgpa_records first, keeping the newest per user.
+    await connection.query(`
+      DELETE c1 FROM cgpa_records c1
+      JOIN cgpa_records c2
+        ON c1.user_id = c2.user_id
+       AND c1.id < c2.id
+    `);
+    await connection.query(
+      'ALTER TABLE cgpa_records ADD UNIQUE KEY unique_user (user_id)'
+    );
+    console.log('Added unique key on cgpa_records.user_id');
+  } catch (e) {
+    if (e.code === 'ER_DUP_KEYNAME' || e.code === 'ER_DUP_ENTRY') {
+      // Key already present — nothing to do.
+    } else {
+      console.warn('cgpa_records migration note:', e.message);
+    }
+  }
 
   console.log('Database and tables are ready.');
   await connection.end();
