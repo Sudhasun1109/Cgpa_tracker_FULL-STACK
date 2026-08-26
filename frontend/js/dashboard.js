@@ -22,15 +22,13 @@ document.getElementById('logoutBtn').onclick = logout;
 (function showAdminLink() {
   const u = getUser();
   if (u && u.role === 'admin') {
-    const navRight = document.querySelector('.nav-right') || document.querySelector('.topbar .nav');
     const logoutBtn = document.getElementById('logoutBtn');
-    if (navRight && logoutBtn) {
+    if (logoutBtn && logoutBtn.parentNode) {
       const link = document.createElement('a');
       link.href = 'admin.html';
       link.className = 'btn btn-outline admin-link';
       link.textContent = 'Admin Panel';
-      link.setAttribute('data-no-rl', '');
-      navRight.insertBefore(link, logoutBtn);
+      logoutBtn.parentNode.insertBefore(link, logoutBtn);
     }
   }
 })();
@@ -64,14 +62,10 @@ async function loadDashboard() {
     currentCgpa = cgpa;
     semestersData = semesters;
 
-    const navAvatar = document.getElementById('navAvatar');
-    if (navAvatar && user.photo) {
-      navAvatar.src = user.photo;
-      navAvatar.classList.remove('hidden');
-    }
     document.getElementById('welcome').textContent = `Welcome, ${user.name} 👋`;
     document.getElementById('profileText').textContent =
       `${user.registerNumber} | ${user.department || 'Student'} | ${user.college || ''}`;
+    updateNavAvatar(user.profilePhoto);
 
     document.getElementById('cgpa').textContent = Number(cgpa.cgpa).toFixed(2);
     document.getElementById('credits').textContent = cgpa.totalCredits;
@@ -122,8 +116,8 @@ function renderSemesters(semesters) {
       <div class="gpa">${Number(s.gpa).toFixed(2)} GPA</div>
       <p>${s.totalCredits} credits • ${s.subjects.length} subjects</p>
       <div class="card-actions">
-        <button class="small-btn" data-no-rl onclick="openSemester(${s.id})">View Subjects</button>
-        <button class="small-btn" data-no-rl onclick="generateMarksheet(${s.id})">Generate Sheet</button>
+        <button class="small-btn" onclick="openSemester(${s.id})">View Subjects</button>
+        <button class="small-btn" onclick="generateMarksheet(${s.id})">Generate Sheet</button>
         <button class="small-btn danger" onclick="deleteSemester(${s.id})">Delete</button>
       </div>
     </div>
@@ -178,7 +172,7 @@ async function loadMarksheets() {
           <h4>${escapeHtml(m.title)}</h4>
           <small>${m.semester_number ? 'Semester ' + m.semester_number + ' • ' : ''}${new Date(m.created_at).toLocaleDateString()}</small>
           <div class="card-actions">
-            <button class="small-btn" data-no-rl onclick="viewMarksheet(${m.id})">View</button>
+            <button class="small-btn" onclick="viewMarksheet(${m.id})">View</button>
             <button class="small-btn danger" onclick="deleteMarksheet(${m.id})">Delete</button>
           </div>
         </div>
@@ -406,33 +400,155 @@ document.getElementById('semesterForm').addEventListener('submit', async e => {
   }
 });
 
+loadDashboard();
+
+// ======================================================
+// EDIT PROFILE
+// ======================================================
+
+const profileModal = document.getElementById('profileModal');
+const feedbackModal = document.getElementById('feedbackModal');
+
+// undefined = keep existing photo, null = remove, string = new photo
+let pendingProfilePhoto = undefined;
+
+const COLLEGE_OPTIONS = [
+  'Erode Sengunthar Engineering College',
+  'Anna University',
+  'PSG College of Technology',
+  'Kongu Engineering College',
+  'Coimbatore Institute of Technology',
+  'Sri Krishna College of Engineering and Technology',
+  'Bannari Amman Institute of Technology',
+  'Government College of Technology'
+];
+const DEPARTMENT_OPTIONS = [
+  'Computer Science and Engineering',
+  'Artificial Intelligence and Data Science',
+  'Artificial Intelligence and Machine Learning',
+  'Information Technology',
+  'Electronics and Communication Engineering',
+  'Electrical and Electronics Engineering',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Biomedical Engineering'
+];
+
+function fillDatalist(id, options) {
+  const dl = document.getElementById(id);
+  if (dl) dl.innerHTML = options.map(o => `<option value="${o}"></option>`).join('');
+}
+fillDatalist('collegeList', COLLEGE_OPTIONS);
+fillDatalist('deptList', DEPARTMENT_OPTIONS);
+fillDatalist('semList', ['1', '2', '3', '4', '5', '6', '7', '8']);
+
+function updateNavAvatar(photo) {
+  const img = document.getElementById('navAvatar');
+  if (!img) return;
+  if (photo) {
+    img.src = photo;
+    img.classList.remove('hidden');
+  } else {
+    img.classList.add('hidden');
+    img.removeAttribute('src');
+  }
+}
+
+const PHOTO_PLACEHOLDER =
+  'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" rx="48" fill="#eef1f8"/><text x="50%" y="54%" font-size="40" text-anchor="middle" fill="#9aa4bf" font-family="Arial">?</text></svg>'
+  );
+
+document.getElementById('editProfileBtn').onclick = () => {
+  const u = currentUser || getUser() || {};
+  document.getElementById('pfName').value = u.name || '';
+  document.getElementById('pfCollege').value = u.college || '';
+  document.getElementById('pfDept').value = u.department || '';
+  document.getElementById('pfSem').value = u.semesterNumber || '';
+  document.getElementById('profilePreview').src = u.profilePhoto || PHOTO_PLACEHOLDER;
+  document.getElementById('profileMessage').textContent = '';
+  pendingProfilePhoto = undefined;
+  profileModal.classList.remove('hidden');
+};
+document.getElementById('closeProfileModal').onclick = () => profileModal.classList.add('hidden');
+
+document.getElementById('profilePhotoFile').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  const msg = document.getElementById('profileMessage');
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    msg.textContent = 'Please choose an image file.';
+    return;
+  }
+  try {
+    pendingProfilePhoto = await compressImage(file, 512, 0.8);
+    document.getElementById('profilePreview').src = pendingProfilePhoto;
+    msg.textContent = '';
+  } catch (err) {
+    msg.textContent = err.message;
+  }
+});
+
+document.getElementById('removePhotoBtn').onclick = () => {
+  pendingProfilePhoto = null;
+  document.getElementById('profilePreview').src = PHOTO_PLACEHOLDER;
+};
+
+document.getElementById('profileForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const msg = document.getElementById('profileMessage');
+  const payload = {
+    name: document.getElementById('pfName').value.trim(),
+    college: document.getElementById('pfCollege').value.trim(),
+    department: document.getElementById('pfDept').value.trim(),
+    semesterNumber: document.getElementById('pfSem').value.trim()
+  };
+  if (pendingProfilePhoto !== undefined) payload.profilePhoto = pendingProfilePhoto;
+
+  try {
+    msg.style.color = '';
+    msg.textContent = 'Saving...';
+    const res = await api('/auth/profile', { method: 'PUT', body: JSON.stringify(payload) });
+    // Refresh cached user + header.
+    currentUser = res.user;
+    localStorage.setItem('cgpa_user', JSON.stringify(res.user));
+    updateNavAvatar(res.user.profilePhoto);
+    document.getElementById('profileText').textContent =
+      `${res.user.registerNumber} | ${res.user.department || 'Student'} | ${res.user.college || ''}`;
+    msg.style.color = '#16803c';
+    msg.textContent = 'Profile updated!';
+    setTimeout(() => profileModal.classList.add('hidden'), 700);
+  } catch (err) {
+    msg.style.color = '#d12f2f';
+    msg.textContent = err.message;
+  }
+});
+
 // ======================================================
 // FEEDBACK
 // ======================================================
 
-const feedbackForm = document.getElementById('feedbackForm');
-if (feedbackForm) {
-  feedbackForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const box = document.getElementById('feedbackMessageBox');
-    box.style.color = '';
-    box.textContent = 'Sending...';
-    try {
-      const res = await api('/feedback', {
-        method: 'POST',
-        body: JSON.stringify({
-          message: document.getElementById('feedbackMessage').value.trim(),
-          rating: document.getElementById('feedbackRating').value || null
-        })
-      });
-      box.style.color = '#16803c';
-      box.textContent = res.message;
-      feedbackForm.reset();
-    } catch (err) {
-      box.style.color = '#d12f2f';
-      box.textContent = err.message;
-    }
-  });
-}
+document.getElementById('feedbackBtn').onclick = () => {
+  document.getElementById('feedbackForm').reset();
+  document.getElementById('feedbackResult').textContent = '';
+  feedbackModal.classList.remove('hidden');
+};
+document.getElementById('closeFeedbackModal').onclick = () => feedbackModal.classList.add('hidden');
 
-loadDashboard();
+document.getElementById('feedbackForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const out = document.getElementById('feedbackResult');
+  const message = document.getElementById('feedbackMessage').value.trim();
+  if (!message) { out.textContent = 'Please write something first.'; return; }
+  try {
+    out.style.color = '';
+    out.textContent = 'Sending...';
+    const res = await api('/feedback', { method: 'POST', body: JSON.stringify({ message }) });
+    out.style.color = '#16803c';
+    out.textContent = res.message;
+    setTimeout(() => feedbackModal.classList.add('hidden'), 900);
+  } catch (err) {
+    out.style.color = '#d12f2f';
+    out.textContent = err.message;
+  }
+});

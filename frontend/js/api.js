@@ -52,3 +52,70 @@ function requireAdmin() {
     window.location.href = 'dashboard.html';
   }
 }
+
+// ======================================================
+// GLOBAL BUTTON RATE LIMITING
+// ------------------------------------------------------
+// Every button gets a 10-second cooldown after it is clicked, so rapid
+// repeated clicks can't spam the (cold-starting) server with API calls.
+// Modal close buttons (.close) and anything marked [data-no-ratelimit]
+// are exempt so users are never trapped in a dialog.
+// ======================================================
+
+const RATE_LIMIT_MS = 10000;
+const _rlCooldowns = new WeakMap();
+
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  if (btn.classList.contains('close') || btn.hasAttribute('data-no-ratelimit')) return;
+
+  const now = Date.now();
+  const until = _rlCooldowns.get(btn) || 0;
+
+  if (now < until) {
+    // Still cooling down — block the click's action completely.
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    return;
+  }
+
+  _rlCooldowns.set(btn, now + RATE_LIMIT_MS);
+  _startButtonCooldown(btn, RATE_LIMIT_MS);
+}, true); // capture phase: runs before the button's own handlers
+
+function _startButtonCooldown(btn, ms) {
+  // Defer so THIS click's own handler still runs before we disable it.
+  setTimeout(() => {
+    if (btn.disabled) return;
+    const original = btn.textContent;
+    // Only rewrite the label for plain-text buttons (skip icon-only buttons).
+    const isTextButton = original && original.trim().length > 1 && !btn.querySelector('*');
+    btn.disabled = true;
+    btn.classList.add('rl-cooldown');
+
+    let remaining = Math.round(ms / 1000);
+    if (isTextButton) btn.textContent = 'Wait ' + remaining + 's';
+
+    const iv = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(iv);
+        btn.disabled = false;
+        btn.classList.remove('rl-cooldown');
+        if (isTextButton) btn.textContent = original;
+      } else if (isTextButton) {
+        btn.textContent = 'Wait ' + remaining + 's';
+      }
+    }, 1000);
+  }, 0);
+}
+
+// ======================================================
+// PWA: register the service worker (installable app + offline shell)
+// ======================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}

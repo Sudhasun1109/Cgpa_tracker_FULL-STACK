@@ -5,14 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - CGPA Tracker</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="CGPA">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+
 </head>
 <body>
   <header class="topbar">
     <div class="container nav">
       <a class="brand" href="dashboard.html">🎓 CGPA Tracker</a>
       <div class="nav-right">
-        <img id="navAvatar" class="nav-avatar hidden" alt="Me">
-        <a href="profile.html" class="btn btn-outline" data-no-rl>Profile</a>
+        <img id="navAvatar" class="nav-avatar hidden" alt="Profile">
+        <button id="editProfileBtn" class="btn btn-outline" data-no-ratelimit>Edit Profile</button>
+        <button id="feedbackBtn" class="btn btn-outline" data-no-ratelimit>Feedback</button>
         <button id="logoutBtn" class="btn btn-outline">Logout</button>
       </div>
     </div>
@@ -24,7 +32,7 @@
         <h1 id="welcome">Welcome!</h1>
         <p id="profileText"></p>
       </div>
-      <button id="addSemesterBtn" class="btn" data-no-rl>+ Add Semester</button>
+      <button id="addSemesterBtn" class="btn" data-no-ratelimit>+ Add Semester</button>
     </section>
 
     <section class="stats">
@@ -47,31 +55,9 @@
     <section class="panel">
       <div class="panel-head">
         <h2>Mark Sheets</h2>
-        <button id="addMarksheetBtn" class="btn" data-no-rl>+ Add Mark Sheet</button>
+        <button id="addMarksheetBtn" class="btn" data-no-ratelimit>+ Add Mark Sheet</button>
       </div>
       <div id="marksheets" class="marksheet-grid"></div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head"><h2>Send Feedback</h2></div>
-      <p class="hint">Have a suggestion or found a bug? Let us know — the admin team reviews all feedback.</p>
-      <form id="feedbackForm" class="feedback-form">
-        <label>Your feedback
-          <textarea id="feedbackMessage" rows="3" maxlength="2000" required placeholder="Type your feedback..."></textarea>
-        </label>
-        <label>Rating (optional)
-          <select id="feedbackRating">
-            <option value="">No rating</option>
-            <option value="5">★★★★★ (5)</option>
-            <option value="4">★★★★ (4)</option>
-            <option value="3">★★★ (3)</option>
-            <option value="2">★★ (2)</option>
-            <option value="1">★ (1)</option>
-          </select>
-        </label>
-        <button class="btn" type="submit">Submit Feedback</button>
-      </form>
-      <div id="feedbackMessageBox" class="message"></div>
     </section>
   </main>
 
@@ -120,10 +106,58 @@
     </div>
   </div>
 
-  <script src="js/ratelimit.js"></script>
+
+  <!-- EDIT PROFILE MODAL -->
+  <div id="profileModal" class="modal hidden">
+    <div class="modal-card">
+      <button class="close" id="closeProfileModal">&times;</button>
+      <h2>Edit Profile</h2>
+      <form id="profileForm">
+        <div class="avatar-edit">
+          <img id="profilePreview" class="avatar-lg" alt="Profile photo">
+          <div class="avatar-actions">
+            <label class="file-btn">Choose Photo<input id="profilePhotoFile" type="file" accept="image/*" hidden></label>
+            <button type="button" id="removePhotoBtn" class="small-btn danger" data-no-ratelimit>Remove Photo</button>
+          </div>
+        </div>
+        <label>Name<input id="pfName" required></label>
+        <label>College
+          <input id="pfCollege" list="collegeList" placeholder="Search or type your college">
+          <datalist id="collegeList"></datalist>
+        </label>
+        <label>Department
+          <input id="pfDept" list="deptList" placeholder="Search or type your department">
+          <datalist id="deptList"></datalist>
+        </label>
+        <label>Current Semester
+          <input id="pfSem" list="semList" placeholder="1 - 8">
+          <datalist id="semList"></datalist>
+        </label>
+        <button class="btn full" type="submit">Save Profile</button>
+      </form>
+      <div id="profileMessage" class="message"></div>
+    </div>
+  </div>
+
+  <!-- FEEDBACK MODAL -->
+  <div id="feedbackModal" class="modal hidden">
+    <div class="modal-card">
+      <button class="close" id="closeFeedbackModal">&times;</button>
+      <h2>Send Feedback</h2>
+      <p class="hint">Tell us what you like or what we can improve. Your feedback goes to the admins.</p>
+      <form id="feedbackForm">
+        <label>Your feedback
+          <textarea id="feedbackMessage" rows="5" required placeholder="Write your feedback here..."></textarea>
+        </label>
+        <button class="btn full" type="submit">Submit Feedback</button>
+      </form>
+      <div id="feedbackResult" class="message"></div>
+    </div>
+  </div>
+
   <script src="js/api.js"></script>
   <script src="js/dashboard.js"></script>
-   <footer class="footer">
+  <footer class="footer">
     <p>Developed by <strong>Sudhasun</strong></p>
 </footer>
 </body>

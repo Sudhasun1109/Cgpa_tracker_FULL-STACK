@@ -11,8 +11,7 @@ router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
   try {
-    const { message, rating } = req.body;
-
+    const { message } = req.body;
     if (!message || !String(message).trim()) {
       return res.status(400).json({ message: 'Feedback message is required' });
     }
@@ -20,41 +19,23 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Feedback is too long (max 2000 characters)' });
     }
 
-    let ratingValue = null;
-    if (rating !== undefined && rating !== null && rating !== '') {
-      const n = Number(rating);
-      if (!Number.isInteger(n) || n < 1 || n > 5) {
-        return res.status(400).json({ message: 'Rating must be between 1 and 5' });
-      }
-      ratingValue = n;
-    }
+    // Store a snapshot of the user's name/email for easy admin display.
+    const [users] = await pool.query(
+      'SELECT name, email FROM users WHERE id = ?',
+      [req.user.id]
+    );
+    const name = users.length ? users[0].name : null;
+    const email = users.length ? users[0].email : null;
 
     await pool.query(
-      'INSERT INTO feedback (user_id, message, rating) VALUES (?, ?, ?)',
-      [req.user.id, String(message).trim(), ratingValue]
+      'INSERT INTO feedback (user_id, name, email, message) VALUES (?, ?, ?, ?)',
+      [req.user.id, name, email, String(message).trim()]
     );
 
-    res.status(201).json({ message: 'Thanks for your feedback!' });
+    res.status(201).json({ message: 'Thanks! Your feedback has been submitted.' });
   } catch (err) {
     console.error('Submit feedback error:', err);
     res.status(500).json({ message: 'Could not submit feedback' });
-  }
-});
-
-// ======================================================
-// MY FEEDBACK (the current user's own submissions)
-// ======================================================
-
-router.get('/mine', async (req, res) => {
-  try {
-    const [rows] = await pool.query(
-      'SELECT id, message, rating, created_at FROM feedback WHERE user_id = ? ORDER BY created_at DESC',
-      [req.user.id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error('Load my feedback error:', err);
-    res.status(500).json({ message: 'Could not load feedback' });
   }
 });
 

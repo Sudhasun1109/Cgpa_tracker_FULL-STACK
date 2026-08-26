@@ -77,7 +77,7 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', authMiddleware, async (req, res) => {
   const [rows] = await pool.query(
-    'SELECT id, name, register_number, email, college, department, role, photo, current_semester FROM users WHERE id = ?',
+    'SELECT id, name, register_number, email, college, department, role, semester_number, profile_photo FROM users WHERE id = ?',
     [req.user.id]
   );
   if (!rows.length) return res.status(404).json({ message: 'User not found' });
@@ -91,8 +91,8 @@ router.get('/me', authMiddleware, async (req, res) => {
     college: u.college,
     department: u.department,
     role: u.role,
-    photo: u.photo || null,
-    currentSemester: u.current_semester || null
+    semesterNumber: u.semester_number,
+    profilePhoto: u.profile_photo
   });
 });
 
@@ -100,51 +100,42 @@ router.post('/logout', (req, res) => {
   res.json({ message: 'Logged out. Remove the token on the client.' });
 });
 
-router.put('/profile', authMiddleware, async (req, res) => {
+// ======================================================
+// UPDATE OWN PROFILE (name, college, department, semester, photo)
+// ======================================================
+
+const authMiddlewareRef = require('../middleware/authMiddleware');
+
+router.put('/profile', authMiddlewareRef, async (req, res) => {
   try {
-    const { name, registerNumber, email, college, department, currentSemester, photo } = req.body;
+    const { name, college, department, semesterNumber, profilePhoto } = req.body;
 
     if (!name || !String(name).trim()) {
       return res.status(400).json({ message: 'Name is required' });
     }
-    if (!email || !String(email).trim()) {
-      return res.status(400).json({ message: 'Email is required' });
-    }
-    if (!registerNumber || !String(registerNumber).trim()) {
-      return res.status(400).json({ message: 'Register number is required' });
-    }
 
-    // Email must stay unique across other users.
-    const [dupe] = await pool.query(
-      'SELECT id FROM users WHERE email = ? AND id <> ?',
-      [email, req.user.id]
-    );
-    if (dupe.length) {
-      return res.status(409).json({ message: 'Email already used by another account' });
-    }
-
-    // Optional current semester (1-8).
-    let sem = null;
-    if (currentSemester !== undefined && currentSemester !== null && currentSemester !== '') {
-      const n = Number(currentSemester);
+    let semNo = null;
+    if (semesterNumber !== undefined && semesterNumber !== null && semesterNumber !== '') {
+      const n = Number(semesterNumber);
       if (!Number.isInteger(n) || n < 1 || n > 8) {
-        return res.status(400).json({ message: 'Current semester must be between 1 and 8' });
+        return res.status(400).json({ message: 'Semester must be between 1 and 8' });
       }
-      sem = n;
+      semNo = n;
     }
 
-    // Optional photo (base64 image data URL). Empty string clears it.
-    let photoValue;
+    // profile_photo: keep as-is if undefined; allow clearing with null/empty.
+    let photo;
     let updatePhoto = false;
-    if (photo !== undefined) {
+    if (profilePhoto !== undefined) {
       updatePhoto = true;
-      if (photo === '' || photo === null) {
-        photoValue = null;
-      } else if (typeof photo === 'string' && /^data:image\/(png|jpe?g|webp);base64,/i.test(photo)) {
-        if (photo.length > 10000000) {
+      if (profilePhoto === null || profilePhoto === '') {
+        photo = null;
+      } else if (typeof profilePhoto === 'string' &&
+                 /^data:image\/(png|jpe?g|webp);base64,/i.test(profilePhoto)) {
+        if (profilePhoto.length > 8000000) {
           return res.status(413).json({ message: 'Photo is too large' });
         }
-        photoValue = photo;
+        photo = profilePhoto;
       } else {
         return res.status(400).json({ message: 'Invalid photo format' });
       }
@@ -152,23 +143,31 @@ router.put('/profile', authMiddleware, async (req, res) => {
 
     if (updatePhoto) {
       await pool.query(
-        `UPDATE users SET name = ?, register_number = ?, email = ?,
-           college = ?, department = ?, current_semester = ?, photo = ?
-         WHERE id = ?`,
-        [name.trim(), registerNumber.trim(), email.trim(),
-         college || null, department || null, sem, photoValue, req.user.id]
+        `UPDATE users SET name = ?, college = ?, department = ?,
+           semester_number = ?, profile_photo = ? WHERE id = ?`,
+        [String(name).trim(), college || null, department || null, semNo, photo, req.user.id]
       );
     } else {
       await pool.query(
-        `UPDATE users SET name = ?, register_number = ?, email = ?,
-           college = ?, department = ?, current_semester = ?
-         WHERE id = ?`,
-        [name.trim(), registerNumber.trim(), email.trim(),
-         college || null, department || null, sem, req.user.id]
+        `UPDATE users SET name = ?, college = ?, department = ?,
+           semester_number = ? WHERE id = ?`,
+        [String(name).trim(), college || null, department || null, semNo, req.user.id]
       );
     }
 
-    res.json({ message: 'Profile updated' });
+    const [rows] = await pool.query(
+      'SELECT id, name, register_number, email, college, department, role, semester_number, profile_photo FROM users WHERE id = ?',
+      [req.user.id]
+    );
+    const u = rows[0];
+    res.json({
+      message: 'Profile updated',
+      user: {
+        id: u.id, name: u.name, registerNumber: u.register_number, email: u.email,
+        college: u.college, department: u.department, role: u.role,
+        semesterNumber: u.semester_number, profilePhoto: u.profile_photo
+      }
+    });
   } catch (err) {
     console.error('Profile update error:', err);
     res.status(500).json({ message: 'Could not update profile' });

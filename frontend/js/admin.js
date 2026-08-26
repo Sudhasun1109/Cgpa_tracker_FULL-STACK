@@ -57,7 +57,7 @@ async function loadUsers() {
         <td>
           <div class="card-actions">
             <button class="small-btn" onclick="viewAcademics(${u.id})">View</button>
-            <button class="small-btn" data-no-rl onclick="openEditUser(${u.id})">Edit</button>
+            <button class="small-btn" onclick="openEditUser(${u.id})">Edit</button>
             <button class="small-btn danger" onclick="deleteUser(${u.id})">Delete</button>
           </div>
         </td>
@@ -268,54 +268,7 @@ document.getElementById('uploadBulkBtn').onclick = () => {
   reader.readAsText(file);
 };
 
-// ======================================================
-// USER FEEDBACK (admin view)
-// ======================================================
-
-async function loadFeedback() {
-  const status = document.getElementById('feedbackStatus');
-  const list = document.getElementById('feedbackList');
-  try {
-    status.textContent = 'Loading...';
-    const items = await api('/admin/feedback');
-    status.textContent = '';
-    if (!items.length) {
-      list.innerHTML = '<div class="empty">No feedback yet.</div>';
-      return;
-    }
-    list.innerHTML = items.map(f => `
-      <div class="feedback-card">
-        <div class="feedback-top">
-          <div>
-            <strong>${escapeHtml(f.user_name)}</strong>
-            <small>${escapeHtml(f.user_email)}</small>
-          </div>
-          <div class="feedback-meta">
-            ${f.rating ? '<span class="stars">' + '★'.repeat(f.rating) + '</span>' : ''}
-            <span class="date">${new Date(f.created_at).toLocaleDateString()}</span>
-            <button class="small-btn danger" onclick="deleteFeedback(${f.id})">Delete</button>
-          </div>
-        </div>
-        <p class="feedback-msg">${escapeHtml(f.message)}</p>
-      </div>
-    `).join('');
-  } catch (err) {
-    status.textContent = err.message;
-  }
-}
-
-async function deleteFeedback(id) {
-  if (!confirm('Delete this feedback?')) return;
-  try {
-    await api(`/admin/feedback/${id}`, { method: 'DELETE' });
-    loadFeedback();
-  } catch (err) {
-    alert(err.message);
-  }
-}
-
 loadUsers();
-loadFeedback();
 
 // ======================================================
 // VIEW A USER'S FULL ACADEMICS (CGPA, semesters, subjects)
@@ -439,3 +392,46 @@ document.getElementById('singleForm').addEventListener('submit', async e => {
     result.textContent = err.message;
   }
 });
+
+// ======================================================
+// USER FEEDBACK (admin view)
+// ======================================================
+
+async function loadFeedback() {
+  const status = document.getElementById('feedbackStatus');
+  const list = document.getElementById('feedbackList');
+  try {
+    status.textContent = 'Loading...';
+    const items = await api('/admin/feedback');
+    status.textContent = items.length ? `${items.length} total` : '';
+    if (!items.length) {
+      list.innerHTML = '<div class="empty">No feedback yet.</div>';
+      return;
+    }
+    list.innerHTML = items.map(f => `
+      <div class="feedback-item">
+        <div class="feedback-meta">
+          <b>${escapeHtml(f.name || 'User')}</b>
+          <span>${escapeHtml(f.email || '')}</span>
+          <span class="feedback-date">${new Date(f.created_at).toLocaleString()}</span>
+        </div>
+        <p class="feedback-msg">${escapeHtml(f.message)}</p>
+        <button class="small-btn danger" onclick="deleteFeedback(${f.id})">Delete</button>
+      </div>
+    `).join('');
+  } catch (err) {
+    status.textContent = err.message;
+  }
+}
+
+async function deleteFeedback(id) {
+  if (!confirm('Delete this feedback?')) return;
+  try {
+    await api(`/admin/feedback/${id}`, { method: 'DELETE' });
+    loadFeedback();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+loadFeedback();

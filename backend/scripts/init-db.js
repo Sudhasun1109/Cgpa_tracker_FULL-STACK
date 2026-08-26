@@ -22,7 +22,24 @@ async function init() {
       college VARCHAR(200),
       department VARCHAR(100),
       role VARCHAR(20) NOT NULL DEFAULT 'user',
+      semester_number INT,
+      profile_photo LONGTEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // ---------------------------------------------------------------
+  // Feedback submitted by users, shown in the admin panel.
+  // ---------------------------------------------------------------
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS feedback (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      name VARCHAR(100),
+      email VARCHAR(150),
+      message TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
 
@@ -80,18 +97,6 @@ async function init() {
     )
   `);
 
-  // User feedback, shown to admins in a dedicated section.
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS feedback (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT NOT NULL,
-      message TEXT NOT NULL,
-      rating INT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `);
-
   // ---------------------------------------------------------------
   // Migration for databases created before the unique key existed.
   // Without a UNIQUE key on user_id, the ON DUPLICATE KEY UPDATE in
@@ -130,21 +135,6 @@ async function init() {
   } catch (e) {
     if (e.code !== 'ER_DUP_FIELDNAME') {
       console.warn('users.role migration note:', e.message);
-    }
-  }
-
-  // Migration: profile photo + current semester columns.
-  for (const [col, ddl] of [
-    ['photo', 'ALTER TABLE users ADD COLUMN photo LONGTEXT'],
-    ['current_semester', 'ALTER TABLE users ADD COLUMN current_semester INT']
-  ]) {
-    try {
-      await connection.query(ddl);
-      console.log(`Added ${col} column to users`);
-    } catch (e) {
-      if (e.code !== 'ER_DUP_FIELDNAME') {
-        console.warn(`users.${col} migration note:`, e.message);
-      }
     }
   }
 
@@ -193,6 +183,23 @@ async function init() {
     }
   } catch (e) {
     console.warn('Admin seed note:', e.message);
+  }
+
+  // ---------------------------------------------------------------
+  // Migration: profile fields (photo + semester) for older databases.
+  // ---------------------------------------------------------------
+  for (const col of [
+    'ADD COLUMN semester_number INT',
+    'ADD COLUMN profile_photo LONGTEXT'
+  ]) {
+    try {
+      await connection.query('ALTER TABLE users ' + col);
+      console.log('users migration: ' + col);
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.warn('users profile migration note:', e.message);
+      }
+    }
   }
 
   console.log('Database and tables are ready.');

@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CGPA Tracker</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="CGPA">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+
 </head>
 <body class="landing">
   <nav class="nav container">
@@ -35,7 +42,12 @@
       </div>
     </div>
   </main>
-   <footer class="footer">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
+  <footer class="footer">
     <p>Developed by <strong>Sudhasun</strong></p>
 </footer>
 </body>

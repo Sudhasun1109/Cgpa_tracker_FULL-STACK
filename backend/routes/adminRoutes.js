@@ -485,11 +485,9 @@ router.post('/single-marks', async (req, res) => {
 router.get('/feedback', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT f.id, f.message, f.rating, f.created_at,
-              u.name AS user_name, u.email AS user_email
-       FROM feedback f
-       JOIN users u ON u.id = f.user_id
-       ORDER BY f.created_at DESC`
+      `SELECT id, user_id, name, email, message, created_at
+       FROM feedback
+       ORDER BY created_at DESC`
     );
     res.json(rows);
   } catch (err) {
