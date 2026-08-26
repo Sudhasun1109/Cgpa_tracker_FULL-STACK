@@ -755,3 +755,13 @@ th
   .wide-modal { width: 96%; padding: 20px 16px; }
   .acad-sem-head { flex-direction: column; }
 }
+.footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    font-size: 14px;
+}
+
+.footer strong {
+    font-weight: 600;
+}
