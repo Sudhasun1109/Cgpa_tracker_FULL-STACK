@@ -22,14 +22,15 @@ document.getElementById('logoutBtn').onclick = logout;
 (function showAdminLink() {
   const u = getUser();
   if (u && u.role === 'admin') {
-    const nav = document.querySelector('.topbar .nav');
+    const navRight = document.querySelector('.nav-right') || document.querySelector('.topbar .nav');
     const logoutBtn = document.getElementById('logoutBtn');
-    if (nav && logoutBtn) {
+    if (navRight && logoutBtn) {
       const link = document.createElement('a');
       link.href = 'admin.html';
       link.className = 'btn btn-outline admin-link';
       link.textContent = 'Admin Panel';
-      nav.insertBefore(link, logoutBtn);
+      link.setAttribute('data-no-rl', '');
+      navRight.insertBefore(link, logoutBtn);
     }
   }
 })();
@@ -63,6 +64,11 @@ async function loadDashboard() {
     currentCgpa = cgpa;
     semestersData = semesters;
 
+    const navAvatar = document.getElementById('navAvatar');
+    if (navAvatar && user.photo) {
+      navAvatar.src = user.photo;
+      navAvatar.classList.remove('hidden');
+    }
     document.getElementById('welcome').textContent = `Welcome, ${user.name} 👋`;
     document.getElementById('profileText').textContent =
       `${user.registerNumber} | ${user.department || 'Student'} | ${user.college || ''}`;
@@ -116,8 +122,8 @@ function renderSemesters(semesters) {
       <div class="gpa">${Number(s.gpa).toFixed(2)} GPA</div>
       <p>${s.totalCredits} credits • ${s.subjects.length} subjects</p>
       <div class="card-actions">
-        <button class="small-btn" onclick="openSemester(${s.id})">View Subjects</button>
-        <button class="small-btn" onclick="generateMarksheet(${s.id})">Generate Sheet</button>
+        <button class="small-btn" data-no-rl onclick="openSemester(${s.id})">View Subjects</button>
+        <button class="small-btn" data-no-rl onclick="generateMarksheet(${s.id})">Generate Sheet</button>
         <button class="small-btn danger" onclick="deleteSemester(${s.id})">Delete</button>
       </div>
     </div>
@@ -172,7 +178,7 @@ async function loadMarksheets() {
           <h4>${escapeHtml(m.title)}</h4>
           <small>${m.semester_number ? 'Semester ' + m.semester_number + ' • ' : ''}${new Date(m.created_at).toLocaleDateString()}</small>
           <div class="card-actions">
-            <button class="small-btn" onclick="viewMarksheet(${m.id})">View</button>
+            <button class="small-btn" data-no-rl onclick="viewMarksheet(${m.id})">View</button>
             <button class="small-btn danger" onclick="deleteMarksheet(${m.id})">Delete</button>
           </div>
         </div>
@@ -399,5 +405,34 @@ document.getElementById('semesterForm').addEventListener('submit', async e => {
     msg.textContent = err.message;
   }
 });
+
+// ======================================================
+// FEEDBACK
+// ======================================================
+
+const feedbackForm = document.getElementById('feedbackForm');
+if (feedbackForm) {
+  feedbackForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const box = document.getElementById('feedbackMessageBox');
+    box.style.color = '';
+    box.textContent = 'Sending...';
+    try {
+      const res = await api('/feedback', {
+        method: 'POST',
+        body: JSON.stringify({
+          message: document.getElementById('feedbackMessage').value.trim(),
+          rating: document.getElementById('feedbackRating').value || null
+        })
+      });
+      box.style.color = '#16803c';
+      box.textContent = res.message;
+      feedbackForm.reset();
+    } catch (err) {
+      box.style.color = '#d12f2f';
+      box.textContent = err.message;
+    }
+  });
+}
 
 loadDashboard();

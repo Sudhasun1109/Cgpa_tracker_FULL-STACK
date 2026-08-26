@@ -104,7 +104,7 @@ async function loadSemester() {
 
         <td>
           <button
-            class="small-btn success"
+            class="small-btn success" data-no-rl
             onclick="editSubject(${s.id})">
             Edit
           </button>
@@ -278,7 +278,7 @@ function editSubject(id) {
   // Cancel button
   cells[5].innerHTML = `
     <button
-      class="small-btn danger"
+      class="small-btn danger" data-no-rl
       onclick="loadSemester()">
       Cancel
     </button>

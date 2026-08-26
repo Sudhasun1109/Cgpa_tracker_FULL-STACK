@@ -478,4 +478,37 @@ router.post('/single-marks', async (req, res) => {
   }
 });
 
+// ======================================================
+// FEEDBACK (admin view)
+// ======================================================
+
+router.get('/feedback', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT f.id, f.message, f.rating, f.created_at,
+              u.name AS user_name, u.email AS user_email
+       FROM feedback f
+       JOIN users u ON u.id = f.user_id
+       ORDER BY f.created_at DESC`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Load feedback error:', err);
+    res.status(500).json({ message: 'Could not load feedback' });
+  }
+});
+
+router.delete('/feedback/:id', async (req, res) => {
+  try {
+    const [result] = await pool.query('DELETE FROM feedback WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Feedback not found' });
+    }
+    res.json({ message: 'Feedback deleted' });
+  } catch (err) {
+    console.error('Delete feedback error:', err);
+    res.status(500).json({ message: 'Could not delete feedback' });
+  }
+});
+
 module.exports = router;

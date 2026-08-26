@@ -21,7 +21,7 @@
         <h1 id="welcome">Admin</h1>
         <p>Manage users and bulk upload marks. Passwords are never shown.</p>
       </div>
-      <button id="addUserBtn" class="btn">+ Add User</button>
+      <button id="addUserBtn" class="btn" data-no-rl>+ Add User</button>
     </section>
 
     <section class="stats">
@@ -107,6 +107,12 @@
       </div>
       <div id="bulkResult" class="bulk-result"></div>
     </section>
+
+    <!-- FEEDBACK (from students) -->
+    <section class="panel">
+      <div class="panel-head"><h2>User Feedback</h2><span id="feedbackStatus"></span></div>
+      <div id="feedbackList" class="feedback-list"></div>
+    </section>
   </main>
 
   <!-- ACADEMICS MODAL (all CGPA / semesters / subjects for a user) -->
@@ -142,9 +148,10 @@
     </div>
   </div>
 
+  <script src="js/ratelimit.js"></script>
   <script src="js/api.js"></script>
   <script src="js/admin.js"></script>
-  <footer class="footer">
+   <footer class="footer">
     <p>Developed by <strong>Sudhasun</strong></p>
 </footer>
 </body>

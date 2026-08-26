@@ -10,7 +10,11 @@
   <header class="topbar">
     <div class="container nav">
       <a class="brand" href="dashboard.html">🎓 CGPA Tracker</a>
-      <button id="logoutBtn" class="btn btn-outline">Logout</button>
+      <div class="nav-right">
+        <img id="navAvatar" class="nav-avatar hidden" alt="Me">
+        <a href="profile.html" class="btn btn-outline" data-no-rl>Profile</a>
+        <button id="logoutBtn" class="btn btn-outline">Logout</button>
+      </div>
     </div>
   </header>
   <main class="container dashboard">
@@ -20,7 +24,7 @@
         <h1 id="welcome">Welcome!</h1>
         <p id="profileText"></p>
       </div>
-      <button id="addSemesterBtn" class="btn">+ Add Semester</button>
+      <button id="addSemesterBtn" class="btn" data-no-rl>+ Add Semester</button>
     </section>
 
     <section class="stats">
@@ -43,9 +47,31 @@
     <section class="panel">
       <div class="panel-head">
         <h2>Mark Sheets</h2>
-        <button id="addMarksheetBtn" class="btn">+ Add Mark Sheet</button>
+        <button id="addMarksheetBtn" class="btn" data-no-rl>+ Add Mark Sheet</button>
       </div>
       <div id="marksheets" class="marksheet-grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Send Feedback</h2></div>
+      <p class="hint">Have a suggestion or found a bug? Let us know — the admin team reviews all feedback.</p>
+      <form id="feedbackForm" class="feedback-form">
+        <label>Your feedback
+          <textarea id="feedbackMessage" rows="3" maxlength="2000" required placeholder="Type your feedback..."></textarea>
+        </label>
+        <label>Rating (optional)
+          <select id="feedbackRating">
+            <option value="">No rating</option>
+            <option value="5">★★★★★ (5)</option>
+            <option value="4">★★★★ (4)</option>
+            <option value="3">★★★ (3)</option>
+            <option value="2">★★ (2)</option>
+            <option value="1">★ (1)</option>
+          </select>
+        </label>
+        <button class="btn" type="submit">Submit Feedback</button>
+      </form>
+      <div id="feedbackMessageBox" class="message"></div>
     </section>
   </main>
 
@@ -94,9 +120,10 @@
     </div>
   </div>
 
+  <script src="js/ratelimit.js"></script>
   <script src="js/api.js"></script>
   <script src="js/dashboard.js"></script>
-  <footer class="footer">
+   <footer class="footer">
     <p>Developed by <strong>Sudhasun</strong></p>
 </footer>
 </body>

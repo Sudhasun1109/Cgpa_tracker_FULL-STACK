@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - CGPA Tracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="dashboard.html">🎓 CGPA Tracker</a>
+      <div class="nav-right">
+        <a href="dashboard.html" class="btn btn-outline" data-no-rl>Dashboard</a>
+        <button id="logoutBtn" class="btn btn-outline">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container dashboard">
+    <section class="welcome">
+      <div>
+        <span class="badge">Profile</span>
+        <h1>Edit your profile</h1>
+        <p>Update your details, photo, department and current semester.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <form id="profileForm" class="profile-form">
+        <div class="photo-block">
+          <img id="photoPreview" class="profile-photo" alt="Profile photo"
+               src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><rect width='120' height='120' fill='%23eef1f8'/><text x='50%25' y='54%25' font-size='42' text-anchor='middle' fill='%234f46e5' font-family='Arial'>👤</text></svg>">
+          <div class="photo-actions">
+            <label class="btn btn-outline" data-no-rl>
+              Choose Photo
+              <input id="photoInput" type="file" accept="image/*" hidden>
+            </label>
+            <button type="button" id="removePhotoBtn" class="btn btn-outline" data-no-rl>Remove</button>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <label>Full Name<input id="name" required></label>
+          <label>Register Number<input id="registerNumber" required></label>
+          <label>Email<input id="email" type="email" required></label>
+
+          <label>Department
+            <input id="department" list="departmentOptions" placeholder="Type to search…" autocomplete="off">
+            <datalist id="departmentOptions">
+              <option value="Computer Science and Engineering">
+              <option value="Information Technology">
+              <option value="Artificial Intelligence and Data Science">
+              <option value="Artificial Intelligence and Machine Learning">
+              <option value="Electronics and Communication Engineering">
+              <option value="Electrical and Electronics Engineering">
+              <option value="Mechanical Engineering">
+              <option value="Civil Engineering">
+              <option value="Computer Science and Business Systems">
+              <option value="Biomedical Engineering">
+              <option value="Mechatronics Engineering">
+              <option value="Agricultural Engineering">
+              <option value="Chemical Engineering">
+            </datalist>
+          </label>
+
+          <label>Current Semester
+            <input id="currentSemester" list="semesterOptions" placeholder="1 - 8" autocomplete="off">
+            <datalist id="semesterOptions">
+              <option value="1"><option value="2"><option value="3"><option value="4">
+              <option value="5"><option value="6"><option value="7"><option value="8">
+            </datalist>
+          </label>
+
+          <label>College<input id="college"></label>
+        </div>
+
+        <button class="btn full" type="submit">Save Changes</button>
+      </form>
+      <div id="message" class="message"></div>
+    </section>
+  </main>
+
+  <script src="js/ratelimit.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/profile.js"></script>
+   <footer class="footer">
+    <p>Developed by <strong>Sudhasun</strong></p>
+</footer>
+</body>
+</html>

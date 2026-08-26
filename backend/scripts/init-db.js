@@ -80,6 +80,18 @@ async function init() {
     )
   `);
 
+  // User feedback, shown to admins in a dedicated section.
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS feedback (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      message TEXT NOT NULL,
+      rating INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
   // ---------------------------------------------------------------
   // Migration for databases created before the unique key existed.
   // Without a UNIQUE key on user_id, the ON DUPLICATE KEY UPDATE in
@@ -118,6 +130,21 @@ async function init() {
   } catch (e) {
     if (e.code !== 'ER_DUP_FIELDNAME') {
       console.warn('users.role migration note:', e.message);
+    }
+  }
+
+  // Migration: profile photo + current semester columns.
+  for (const [col, ddl] of [
+    ['photo', 'ALTER TABLE users ADD COLUMN photo LONGTEXT'],
+    ['current_semester', 'ALTER TABLE users ADD COLUMN current_semester INT']
+  ]) {
+    try {
+      await connection.query(ddl);
+      console.log(`Added ${col} column to users`);
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.warn(`users.${col} migration note:`, e.message);
+      }
     }
   }
 
