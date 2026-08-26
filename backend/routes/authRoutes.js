@@ -98,4 +98,44 @@ router.post('/logout', (req, res) => {
   res.json({ message: 'Logged out. Remove the token on the client.' });
 });
 
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email, registerNumber, newPassword } = req.body;
+
+    if (!email || !registerNumber || !newPassword) {
+      return res.status(400).json({
+        message: 'Email, register number and new password are required'
+      });
+    }
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+    }
+
+    const [rows] = await pool.query(
+      'SELECT id, register_number FROM users WHERE email = ?',
+      [email]
+    );
+    if (!rows.length) {
+      return res.status(404).json({ message: 'No account found with that email' });
+    }
+
+    // Identity check: the register number must match our records
+    // (case-insensitive, trimmed). This lets users reset their own
+    // password without an email server.
+    const stored = String(rows[0].register_number || '').trim().toLowerCase();
+    const given = String(registerNumber).trim().toLowerCase();
+    if (stored !== given) {
+      return res.status(401).json({ message: 'Register number does not match our records' });
+    }
+
+    const hashed = await bcrypt.hash(String(newPassword), 10);
+    await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashed, rows[0].id]);
+
+    res.json({ message: 'Password reset successful. You can now log in.' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ message: 'Could not reset password' });
+  }
+});
+
 module.exports = router;

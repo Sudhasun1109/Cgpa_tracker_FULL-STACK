@@ -1,4 +1,4 @@
-const API_BASE = 'https://cgpa-tracker-backend.onrender.com/api';
+const API_BASE = 'https://cgpa-tracker-backend.onrender.com';
 
 function getToken() {
   return localStorage.getItem('cgpa_token');
@@ -24,7 +24,9 @@ async function api(path, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    if (response.status === 401) logout();
+    // Only force logout when a session token exists (expired/invalid session).
+    // On login/forgot pages there is no token, so we let the error show.
+    if (response.status === 401 && getToken()) logout();
     throw new Error(data.message || 'Request failed');
   }
   return data;

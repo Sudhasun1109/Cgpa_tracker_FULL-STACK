@@ -40,7 +40,7 @@ async function loadUsers() {
       users.filter(u => u.role !== 'admin').length;
 
     if (!users.length) {
-      usersBody.innerHTML = '<tr><td colspan="8" class="empty">No users yet.</td></tr>';
+      usersBody.innerHTML = '<tr><td colspan="9" class="empty">No users yet.</td></tr>';
       return;
     }
 
@@ -52,9 +52,11 @@ async function loadUsers() {
         <td>${escapeHtml(u.college || '-')}</td>
         <td>${escapeHtml(u.department || '-')}</td>
         <td><span class="role-pill ${u.role === 'admin' ? 'is-admin' : ''}">${escapeHtml(u.role)}</span></td>
+        <td><b>${Number(u.cgpa || 0).toFixed(2)}</b></td>
         <td>${u.semester_count}</td>
         <td>
           <div class="card-actions">
+            <button class="small-btn" onclick="viewAcademics(${u.id})">View</button>
             <button class="small-btn" onclick="openEditUser(${u.id})">Edit</button>
             <button class="small-btn danger" onclick="deleteUser(${u.id})">Delete</button>
           </div>
@@ -267,6 +269,77 @@ document.getElementById('uploadBulkBtn').onclick = () => {
 };
 
 loadUsers();
+
+// ======================================================
+// VIEW A USER'S FULL ACADEMICS (CGPA, semesters, subjects)
+// ======================================================
+
+const academicsModal = document.getElementById('academicsModal');
+document.getElementById('closeAcademics').onclick = () => academicsModal.classList.add('hidden');
+
+async function viewAcademics(id) {
+  const body = document.getElementById('academicsBody');
+  body.innerHTML = '<p class="hint">Loading...</p>';
+  academicsModal.classList.remove('hidden');
+  try {
+    const data = await api(`/admin/users/${id}/academics`);
+    const u = data.user;
+
+    let html = `
+      <h2>${escapeHtml(u.name)}</h2>
+      <p class="hint">
+        ${escapeHtml(u.register_number)} · ${escapeHtml(u.email)}
+        ${u.department ? '· ' + escapeHtml(u.department) : ''}
+        ${u.college ? '· ' + escapeHtml(u.college) : ''}
+      </p>
+      <div class="stats acad-stats">
+        <div class="stat-card"><small>CGPA</small><strong>${Number(data.cgpa).toFixed(2)}</strong></div>
+        <div class="stat-card"><small>Credits Earned</small><strong>${data.totalCredits}</strong></div>
+        <div class="stat-card"><small>Semesters</small><strong>${data.semesters.length}</strong></div>
+      </div>
+    `;
+
+    if (!data.semesters.length) {
+      html += '<div class="empty">No academic data for this student yet.</div>';
+    } else {
+      data.semesters.forEach(sem => {
+        html += `
+          <div class="acad-sem">
+            <div class="acad-sem-head">
+              <h3>${escapeHtml(sem.semester_name)}</h3>
+              <span>GPA ${Number(sem.gpa).toFixed(2)} · ${sem.earnedCredits}/${sem.registeredCredits} credits</span>
+            </div>`;
+        if (!sem.subjects.length) {
+          html += '<p class="hint">No subjects.</p>';
+        } else {
+          html += `
+            <div class="table-wrap">
+              <table>
+                <thead><tr>
+                  <th>Code</th><th>Subject</th><th>Credits</th><th>Grade</th><th>Point</th><th>Result</th>
+                </tr></thead>
+                <tbody>
+                  ${sem.subjects.map(su => `
+                    <tr>
+                      <td>${escapeHtml(su.subject_code || '-')}</td>
+                      <td>${escapeHtml(su.subject_name)}</td>
+                      <td>${Number(su.credits)}</td>
+                      <td><b>${escapeHtml(su.grade)}</b></td>
+                      <td>${Number(su.grade_point).toFixed(2)}</td>
+                      <td>${Number(su.grade_point) > 0 ? 'PASS' : 'RA'}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>`;
+        }
+        html += '</div>';
+      });
+    }
+    body.innerHTML = html;
+  } catch (err) {
+    body.innerHTML = `<div class="empty">${escapeHtml(err.message)}</div>`;
+  }
+}
 
 // ======================================================
 // SINGLE MARKS ENTRY

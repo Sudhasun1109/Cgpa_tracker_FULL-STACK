@@ -39,7 +39,7 @@
             <tr>
               <th>Name</th><th>Reg No</th><th>Email</th>
               <th>College</th><th>Dept</th><th>Role</th>
-              <th>Sems</th><th>Actions</th>
+              <th>CGPA</th><th>Sems</th><th>Actions</th>
             </tr>
           </thead>
           <tbody id="usersBody"></tbody>
@@ -108,6 +108,14 @@
       <div id="bulkResult" class="bulk-result"></div>
     </section>
   </main>
+
+  <!-- ACADEMICS MODAL (all CGPA / semesters / subjects for a user) -->
+  <div id="academicsModal" class="modal hidden">
+    <div class="modal-card wide-modal">
+      <button class="close" id="closeAcademics">×</button>
+      <div id="academicsBody"></div>
+    </div>
+  </div>
 
   <!-- ADD / EDIT USER MODAL -->
   <div id="userModal" class="modal hidden">

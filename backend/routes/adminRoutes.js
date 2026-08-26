@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const pool = require('../config/db');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
-const { getGradePoint } = require('../utils/cgpaCalculator');
+const { getGradePoint, calculateGpa } = require('../utils/cgpaCalculator');
 
 const router = express.Router();
 
@@ -28,6 +28,25 @@ router.get('/users', async (req, res) => {
        FROM users
        ORDER BY created_at DESC`
     );
+
+    // Attach each user's overall CGPA (earned-credit weighted, failed excluded).
+    const [agg] = await pool.query(`
+      SELECT sem.user_id AS uid,
+        SUM(CASE WHEN sub.grade_point > 0 AND sub.credits > 0
+                 THEN sub.credits * sub.grade_point ELSE 0 END) AS weighted,
+        SUM(CASE WHEN sub.grade_point > 0 AND sub.credits > 0
+                 THEN sub.credits ELSE 0 END) AS earned
+      FROM semesters sem
+      JOIN subjects sub ON sub.semester_id = sem.id
+      GROUP BY sem.user_id
+    `);
+    const cgpaMap = {};
+    for (const a of agg) {
+      const earned = Number(a.earned) || 0;
+      cgpaMap[a.uid] = earned > 0 ? Number((Number(a.weighted) / earned).toFixed(2)) : 0;
+    }
+    rows.forEach(u => { u.cgpa = cgpaMap[u.id] || 0; });
+
     res.json(rows);
   } catch (err) {
     console.error('List users error:', err);
@@ -52,6 +71,58 @@ router.get('/users/:id', async (req, res) => {
   } catch (err) {
     console.error('Get user error:', err);
     res.status(500).json({ message: 'Could not load user' });
+  }
+});
+
+// ======================================================
+// GET ONE USER'S FULL ACADEMICS (semesters + subjects + GPA + CGPA)
+// ======================================================
+
+router.get('/users/:id/academics', async (req, res) => {
+  try {
+    const [users] = await pool.query(
+      `SELECT ${USER_FIELDS} FROM users WHERE id = ?`,
+      [req.params.id]
+    );
+    if (!users.length) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const [semesters] = await pool.query(
+      'SELECT * FROM semesters WHERE user_id = ? ORDER BY semester_number',
+      [req.params.id]
+    );
+
+    let totalWeighted = 0;
+    let totalEarned = 0;
+
+    for (const sem of semesters) {
+      const [subjects] = await pool.query(
+        'SELECT * FROM subjects WHERE semester_id = ? ORDER BY id',
+        [sem.id]
+      );
+      const result = calculateGpa(subjects);
+      sem.gpa = result.gpa;
+      sem.registeredCredits = result.registeredCredits;
+      sem.earnedCredits = result.earnedCredits;
+      sem.subjects = subjects;
+      totalWeighted += result.weightedPoints;
+      totalEarned += result.earnedCredits;
+    }
+
+    const cgpa = totalEarned > 0
+      ? Number((totalWeighted / totalEarned).toFixed(2))
+      : 0;
+
+    res.json({
+      user: users[0],
+      cgpa,
+      totalCredits: totalEarned,
+      semesters
+    });
+  } catch (err) {
+    console.error('User academics error:', err);
+    res.status(500).json({ message: 'Could not load academics' });
   }
 });
 
