@@ -30,6 +30,23 @@ async function api(path, options = {}) {
   return data;
 }
 
+function getUser() {
+  try {
+    return JSON.parse(localStorage.getItem('cgpa_user')) || null;
+  } catch {
+    return null;
+  }
+}
+
 function requireAuth() {
   if (!getToken()) window.location.href = 'login.html';
+}
+
+function requireAdmin() {
+  if (!getToken()) { window.location.href = 'login.html'; return; }
+  const user = getUser();
+  if (!user || user.role !== 'admin') {
+    // Not an admin -> send to the normal dashboard.
+    window.location.href = 'dashboard.html';
+  }
 }

@@ -51,7 +51,7 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
+      { id: user.id, email: user.email, name: user.name, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -65,7 +65,8 @@ router.post('/login', async (req, res) => {
         registerNumber: user.register_number,
         email: user.email,
         college: user.college,
-        department: user.department
+        department: user.department,
+        role: user.role
       }
     });
   } catch (err) {
@@ -76,7 +77,7 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', authMiddleware, async (req, res) => {
   const [rows] = await pool.query(
-    'SELECT id, name, register_number, email, college, department FROM users WHERE id = ?',
+    'SELECT id, name, register_number, email, college, department, role FROM users WHERE id = ?',
     [req.user.id]
   );
   if (!rows.length) return res.status(404).json({ message: 'User not found' });
@@ -88,7 +89,8 @@ router.get('/me', authMiddleware, async (req, res) => {
     registerNumber: u.register_number,
     email: u.email,
     college: u.college,
-    department: u.department
+    department: u.department,
+    role: u.role
   });
 });
 

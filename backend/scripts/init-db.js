@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 async function init() {
@@ -20,6 +21,7 @@ async function init() {
       password VARCHAR(255) NOT NULL,
       college VARCHAR(200),
       department VARCHAR(100),
+      role VARCHAR(20) NOT NULL DEFAULT 'user',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -102,6 +104,68 @@ async function init() {
     } else {
       console.warn('cgpa_records migration note:', e.message);
     }
+  }
+
+  // ---------------------------------------------------------------
+  // Migration: add the `role` column for databases created before
+  // roles existed. Safe to ignore if the column is already present.
+  // ---------------------------------------------------------------
+  try {
+    await connection.query(
+      "ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user'"
+    );
+    console.log('Added role column to users');
+  } catch (e) {
+    if (e.code !== 'ER_DUP_FIELDNAME') {
+      console.warn('users.role migration note:', e.message);
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Seed an admin account if one does not already exist.
+  // Credentials come from ADMIN_EMAIL / ADMIN_PASSWORD in .env
+  // (with safe defaults). Change the password after first login.
+  // ---------------------------------------------------------------
+  try {
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@cgpa.local').trim();
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    const [admins] = await connection.query(
+      "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
+    );
+
+    if (!admins.length) {
+      const [byEmail] = await connection.query(
+        'SELECT id FROM users WHERE email = ?',
+        [adminEmail]
+      );
+      const hashed = await bcrypt.hash(adminPassword, 10);
+
+      if (byEmail.length) {
+        // Promote the existing account to admin.
+        await connection.query(
+          "UPDATE users SET role = 'admin' WHERE id = ?",
+          [byEmail[0].id]
+        );
+        console.log(`Promoted existing user ${adminEmail} to admin`);
+      } else {
+        await connection.query(
+          `INSERT INTO users (name, register_number, email, password, role)
+           VALUES (?, ?, ?, ?, 'admin')`,
+          ['Administrator', 'ADMIN', adminEmail, hashed]
+        );
+        console.log('----------------------------------------------');
+        console.log('Admin account created:');
+        console.log('  email   :', adminEmail);
+        console.log('  password:', adminPassword);
+        console.log('  (change this password after first login)');
+        console.log('----------------------------------------------');
+      }
+    } else {
+      console.log('Admin account already exists — skipping seed.');
+    }
+  } catch (e) {
+    console.warn('Admin seed note:', e.message);
   }
 
   console.log('Database and tables are ready.');

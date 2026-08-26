@@ -8,6 +8,7 @@ const semesterRoutes = require('./routes/semesterRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const cgpaRoutes = require('./routes/cgpaRoutes');
 const marksheetRoutes = require('./routes/marksheetRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api/semesters', semesterRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/cgpa', cgpaRoutes);
 app.use('/api/marksheets', marksheetRoutes);
+app.use('/api/admin', adminRoutes);
 
 // IMPORTANT FOR RENDER
 const PORT = process.env.PORT || 5000;

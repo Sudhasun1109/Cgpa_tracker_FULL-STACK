@@ -17,6 +17,22 @@ let semestersData = [];
 let pendingImageData = null;
 
 document.getElementById('logoutBtn').onclick = logout;
+
+// Show an Admin Panel link in the header for admin users only.
+(function showAdminLink() {
+  const u = getUser();
+  if (u && u.role === 'admin') {
+    const nav = document.querySelector('.topbar .nav');
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (nav && logoutBtn) {
+      const link = document.createElement('a');
+      link.href = 'admin.html';
+      link.className = 'btn btn-outline admin-link';
+      link.textContent = 'Admin Panel';
+      nav.insertBefore(link, logoutBtn);
+    }
+  }
+})();
 document.getElementById('addSemesterBtn').onclick = () => modal.classList.remove('hidden');
 document.getElementById('closeModal').onclick = () => modal.classList.add('hidden');
 

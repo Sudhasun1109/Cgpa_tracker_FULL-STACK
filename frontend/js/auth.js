@@ -15,7 +15,12 @@ if (loginForm) {
         })
       });
       saveAuth(data);
-      window.location.href = 'dashboard.html';
+      // Role-based redirect: admins go to the admin panel.
+      if (data.user && data.user.role === 'admin') {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'dashboard.html';
+      }
     } catch (err) {
       message.textContent = err.message;
     }

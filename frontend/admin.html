@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - CGPA Tracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="admin.html">🎓 CGPA Tracker <span class="role-tag">Admin</span></a>
+      <button id="logoutBtn" class="btn btn-outline">Logout</button>
+    </div>
+  </header>
+
+  <main class="container dashboard">
+    <section class="welcome">
+      <div>
+        <span class="badge">Admin Panel</span>
+        <h1 id="welcome">Admin</h1>
+        <p>Manage users and bulk upload marks. Passwords are never shown.</p>
+      </div>
+      <button id="addUserBtn" class="btn">+ Add User</button>
+    </section>
+
+    <section class="stats">
+      <div class="stat-card"><small>Total Users</small><strong id="userCount">0</strong></div>
+      <div class="stat-card"><small>Admins</small><strong id="adminCount">0</strong></div>
+      <div class="stat-card"><small>Students</small><strong id="studentCount">0</strong></div>
+    </section>
+
+    <!-- USERS -->
+    <section class="panel">
+      <div class="panel-head"><h2>All Users</h2><span id="usersStatus"></span></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th><th>Reg No</th><th>Email</th>
+              <th>College</th><th>Dept</th><th>Role</th>
+              <th>Sems</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SINGLE MARKS ENTRY (admin only) -->
+    <section class="panel">
+      <div class="panel-head"><h2>Add Marks — Single Student</h2></div>
+      <p class="hint">
+        Add one subject's marks for a chosen student. The semester is created
+        automatically if it doesn't exist. Grade point is calculated for you.
+      </p>
+      <form id="singleForm" class="single-form">
+        <label>Student
+          <select id="smUser" required></select>
+        </label>
+        <label>Semester Number
+          <input id="smSemNo" type="number" min="1" max="12" required>
+        </label>
+        <label>Semester Name (optional)
+          <input id="smSemName" placeholder="Semester 1">
+        </label>
+        <label>Subject Code (optional)
+          <input id="smCode" placeholder="23BS101">
+        </label>
+        <label>Subject Name
+          <input id="smName" placeholder="Engineering Mathematics" required>
+        </label>
+        <label>Credits
+          <input id="smCredits" type="number" min="0" max="10" step="0.5" required>
+        </label>
+        <label>Grade
+          <select id="smGrade" required>
+            <option value="">Select</option>
+            <option value="O">O (10)</option>
+            <option value="A+">A+ (9)</option>
+            <option value="A">A (8)</option>
+            <option value="B+">B+ (7)</option>
+            <option value="B">B (6)</option>
+            <option value="C">C (5)</option>
+            <option value="P">P (4)</option>
+            <option value="U">U / Fail (0)</option>
+            <option value="F">F / Fail (0)</option>
+          </select>
+        </label>
+        <button class="btn" type="submit">Add Marks</button>
+      </form>
+      <div id="singleResult" class="bulk-result"></div>
+    </section>
+
+    <!-- BULK UPLOAD MARKS (admin only) -->
+    <section class="panel">
+      <div class="panel-head"><h2>Bulk Upload Marks</h2></div>
+      <p class="hint">
+        Step 1: download the template. Step 2: fill one row per subject
+        (identify the student by their registered <b>email</b>). Step 3: upload it.
+        Missing semesters are created automatically.
+      </p>
+      <div class="bulk-bar">
+        <button id="downloadTemplateBtn" class="btn btn-outline">⬇ Download Template</button>
+        <input id="bulkFile" type="file" accept=".csv" />
+        <button id="uploadBulkBtn" class="btn">Upload Marks</button>
+      </div>
+      <div id="bulkResult" class="bulk-result"></div>
+    </section>
+  </main>
+
+  <!-- ADD / EDIT USER MODAL -->
+  <div id="userModal" class="modal hidden">
+    <div class="modal-card">
+      <button class="close" id="closeUserModal">×</button>
+      <h2 id="userModalTitle">Add User</h2>
+      <form id="userForm">
+        <input type="hidden" id="userId">
+        <label>Name<input id="uName" required></label>
+        <label>Register Number<input id="uReg" required></label>
+        <label>Email<input id="uEmail" type="email" required></label>
+        <label id="passwordLabel">Password<input id="uPassword" type="password"></label>
+        <label>College<input id="uCollege"></label>
+        <label>Department<input id="uDept"></label>
+        <label>Role
+          <select id="uRole">
+            <option value="user">Student</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <button class="btn full" type="submit">Save</button>
+      </form>
+      <div id="userMessage" class="message"></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
