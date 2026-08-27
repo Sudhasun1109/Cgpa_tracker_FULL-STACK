@@ -1,4 +1,10 @@
-const API_BASE = 'https://cgpa-tracker-backend.onrender.com/api';
+// API base URL.
+// - Local testing (localhost/127.0.0.1) -> your local backend on port 5000.
+// - Deployed (Render, phone PWA, etc.)  -> your live backend URL.
+// Set window.API_BASE_URL before this script, or edit PROD_API_BASE below.
+const PROD_API_BASE = 'https://cgpa-tracker-backend.onrender.com/api'; // <-- change to YOUR backend URL
+const _isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+const API_BASE = window.API_BASE_URL || (_isLocal ? 'http://localhost:5000/api' : PROD_API_BASE);
 
 function getToken() {
   return localStorage.getItem('cgpa_token');
@@ -27,7 +33,7 @@ async function api(path, options = {}) {
     // Only force logout when a session token exists (expired/invalid session).
     // On login/forgot pages there is no token, so we let the error show.
     if (response.status === 401 && getToken()) logout();
-    throw new Error(data.message || 'Request failed');
+    throw new Error(data.message || `Server error (${response.status}). Please try again.`);
   }
   return data;
 }

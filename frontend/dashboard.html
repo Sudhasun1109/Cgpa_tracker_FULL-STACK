@@ -3,7 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - CGPA Tracker</title>
+  <meta name="description" content="Your personal CGPA dashboard.">
+  <meta name="author" content="CGPA Tracker">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://cgpa-tracker-frontend.onrender.com/dashboard.html">
+  <link rel="icon" href="icons/icon-192.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="CGPA Tracker">
+  <meta property="og:title" content="Dashboard – CGPA Tracker">
+  <meta property="og:description" content="Your personal CGPA dashboard.">
+  <meta property="og:url" content="https://cgpa-tracker-frontend.onrender.com/dashboard.html">
+  <meta property="og:image" content="https://cgpa-tracker-frontend.onrender.com/icons/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Dashboard – CGPA Tracker">
+  <meta name="twitter:description" content="Your personal CGPA dashboard.">
+  <meta name="twitter:image" content="https://cgpa-tracker-frontend.onrender.com/icons/og-image.png">
+  <title>Dashboard – CGPA Tracker</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4f46e5">
@@ -121,6 +138,8 @@
           </div>
         </div>
         <label>Name<input id="pfName" required></label>
+        <label>Email<input id="pfEmail" type="email" required></label>
+        <label>Register Number<input id="pfReg" readonly disabled></label>
         <label>College
           <input id="pfCollege" list="collegeList" placeholder="Search or type your college">
           <datalist id="collegeList"></datalist>
@@ -160,5 +179,6 @@
   <footer class="footer">
     <p>Developed by <strong>Sudhasun</strong></p>
 </footer>
+
 </body>
 </html>

@@ -76,24 +76,29 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/me', authMiddleware, async (req, res) => {
-  const [rows] = await pool.query(
-    'SELECT id, name, register_number, email, college, department, role, semester_number, profile_photo FROM users WHERE id = ?',
-    [req.user.id]
-  );
-  if (!rows.length) return res.status(404).json({ message: 'User not found' });
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, name, register_number, email, college, department, role, semester_number, profile_photo FROM users WHERE id = ?',
+      [req.user.id]
+    );
+    if (!rows.length) return res.status(404).json({ message: 'User not found' });
 
-  const u = rows[0];
-  res.json({
-    id: u.id,
-    name: u.name,
-    registerNumber: u.register_number,
-    email: u.email,
-    college: u.college,
-    department: u.department,
-    role: u.role,
-    semesterNumber: u.semester_number,
-    profilePhoto: u.profile_photo
-  });
+    const u = rows[0];
+    res.json({
+      id: u.id,
+      name: u.name,
+      registerNumber: u.register_number,
+      email: u.email,
+      college: u.college,
+      department: u.department,
+      role: u.role,
+      semesterNumber: u.semester_number,
+      profilePhoto: u.profile_photo
+    });
+  } catch (err) {
+    console.error('Load /me error:', err);
+    res.status(500).json({ message: 'Could not load your profile' });
+  }
 });
 
 router.post('/logout', (req, res) => {
@@ -108,10 +113,25 @@ const authMiddlewareRef = require('../middleware/authMiddleware');
 
 router.put('/profile', authMiddlewareRef, async (req, res) => {
   try {
-    const { name, college, department, semesterNumber, profilePhoto } = req.body;
+    const { name, email, college, department, semesterNumber, profilePhoto } = req.body;
 
     if (!name || !String(name).trim()) {
       return res.status(400).json({ message: 'Name is required' });
+    }
+    if (!email || !String(email).trim()) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+    const cleanEmail = String(email).trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return res.status(400).json({ message: 'Please enter a valid email' });
+    }
+    // Email must remain unique across other accounts.
+    const [dupe] = await pool.query(
+      'SELECT id FROM users WHERE email = ? AND id <> ?',
+      [cleanEmail, req.user.id]
+    );
+    if (dupe.length) {
+      return res.status(409).json({ message: 'Email already used by another account' });
     }
 
     let semNo = null;
@@ -143,15 +163,15 @@ router.put('/profile', authMiddlewareRef, async (req, res) => {
 
     if (updatePhoto) {
       await pool.query(
-        `UPDATE users SET name = ?, college = ?, department = ?,
+        `UPDATE users SET name = ?, email = ?, college = ?, department = ?,
            semester_number = ?, profile_photo = ? WHERE id = ?`,
-        [String(name).trim(), college || null, department || null, semNo, photo, req.user.id]
+        [String(name).trim(), cleanEmail, college || null, department || null, semNo, photo, req.user.id]
       );
     } else {
       await pool.query(
-        `UPDATE users SET name = ?, college = ?, department = ?,
+        `UPDATE users SET name = ?, email = ?, college = ?, department = ?,
            semester_number = ? WHERE id = ?`,
-        [String(name).trim(), college || null, department || null, semNo, req.user.id]
+        [String(name).trim(), cleanEmail, college || null, department || null, semNo, req.user.id]
       );
     }
 

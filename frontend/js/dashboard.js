@@ -462,6 +462,8 @@ const PHOTO_PLACEHOLDER =
 document.getElementById('editProfileBtn').onclick = () => {
   const u = currentUser || getUser() || {};
   document.getElementById('pfName').value = u.name || '';
+  document.getElementById('pfEmail').value = u.email || '';
+  document.getElementById('pfReg').value = u.registerNumber || u.register_number || '';
   document.getElementById('pfCollege').value = u.college || '';
   document.getElementById('pfDept').value = u.department || '';
   document.getElementById('pfSem').value = u.semesterNumber || '';
@@ -499,6 +501,7 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
   const msg = document.getElementById('profileMessage');
   const payload = {
     name: document.getElementById('pfName').value.trim(),
+    email: document.getElementById('pfEmail').value.trim(),
     college: document.getElementById('pfCollege').value.trim(),
     department: document.getElementById('pfDept').value.trim(),
     semesterNumber: document.getElementById('pfSem').value.trim()

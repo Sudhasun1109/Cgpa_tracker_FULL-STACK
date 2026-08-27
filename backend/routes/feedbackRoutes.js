@@ -19,17 +19,11 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Feedback is too long (max 2000 characters)' });
     }
 
-    // Store a snapshot of the user's name/email for easy admin display.
-    const [users] = await pool.query(
-      'SELECT name, email FROM users WHERE id = ?',
-      [req.user.id]
-    );
-    const name = users.length ? users[0].name : null;
-    const email = users.length ? users[0].email : null;
-
+    // Store only the user id + message; the admin view joins the users
+    // table at read time so the name/email are always current and correct.
     await pool.query(
-      'INSERT INTO feedback (user_id, name, email, message) VALUES (?, ?, ?, ?)',
-      [req.user.id, name, email, String(message).trim()]
+      'INSERT INTO feedback (user_id, message) VALUES (?, ?)',
+      [req.user.id, String(message).trim()]
     );
 
     res.status(201).json({ message: 'Thanks! Your feedback has been submitted.' });

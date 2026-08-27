@@ -10,6 +10,7 @@ const cgpaRoutes = require('./routes/cgpaRoutes');
 const marksheetRoutes = require('./routes/marksheetRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const feedbackRoutes = require('./routes/feedbackRoutes');
+const ensureSchema = require('./config/ensureSchema');
 
 const app = express();
 
@@ -43,7 +44,13 @@ app.use('/api/feedback', feedbackRoutes);
 // IMPORTANT FOR RENDER
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`✅ CGPA Tracker API running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  // Auto-migrate the database so missing columns/tables never cause 500s.
+  try {
+    await ensureSchema();
+  } catch (e) {
+    console.warn('Schema auto-migration failed:', e.message);
+  }
 });

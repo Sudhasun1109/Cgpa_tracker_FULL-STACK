@@ -872,3 +872,7 @@ textarea {
 .footer strong {
     font-weight: 600;
 }
+.modal-card {
+  max-height: 90vh;
+  overflow-y: auto;
+}

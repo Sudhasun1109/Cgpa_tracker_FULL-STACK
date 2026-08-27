@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /login.html
+Allow: /register.html
+
+# Private, auth-only pages — keep out of search results
+Disallow: /dashboard.html
+Disallow: /admin.html
+Disallow: /semester.html
+Disallow: /forgot-password.html
+
+Sitemap: https://cgpa-tracker-frontend.onrender.com/sitemap.xml

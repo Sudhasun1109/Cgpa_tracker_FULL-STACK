@@ -412,6 +412,7 @@ async function loadFeedback() {
       <div class="feedback-item">
         <div class="feedback-meta">
           <b>${escapeHtml(f.name || 'User')}</b>
+          <span>${escapeHtml(f.register_number || '')}</span>
           <span>${escapeHtml(f.email || '')}</span>
           <span class="feedback-date">${new Date(f.created_at).toLocaleString()}</span>
         </div>
