@@ -57,6 +57,22 @@
     <!-- USERS -->
     <section class="panel">
       <div class="panel-head"><h2>All Users</h2><span id="usersStatus"></span></div>
+      <div class="admin-filters">
+        <label class="filter-field">Search
+          <input id="userSearch" type="search" placeholder="Name, register no, email, college...">
+        </label>
+        <label class="filter-field">Role
+          <select id="roleFilter">
+            <option value="all">All Roles</option>
+            <option value="user">Students</option>
+            <option value="admin">Admins</option>
+          </select>
+        </label>
+        <label class="filter-field">Department
+          <select id="departmentFilter"><option value="all">All Departments</option></select>
+        </label>
+        <button id="clearUserFilters" class="btn btn-outline" type="button" data-no-ratelimit>Clear</button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>

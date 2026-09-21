@@ -21,7 +21,7 @@ function escapeHtml(value) {
 }
 
 // ======================================================
-// LOAD USERS
+// LOAD USERS + SEARCH / FILTER
 // ======================================================
 
 async function loadUsers() {
@@ -31,42 +31,96 @@ async function loadUsers() {
     const users = await api('/admin/users');
     usersCache = users;
     populateStudentDropdown(users);
+    populateDepartmentFilter(users);
+    updateUserStats(users);
+    renderUsers();
     status.textContent = '';
-
-    document.getElementById('userCount').textContent = users.length;
-    document.getElementById('adminCount').textContent =
-      users.filter(u => u.role === 'admin').length;
-    document.getElementById('studentCount').textContent =
-      users.filter(u => u.role !== 'admin').length;
-
-    if (!users.length) {
-      usersBody.innerHTML = '<tr><td colspan="9" class="empty">No users yet.</td></tr>';
-      return;
-    }
-
-    usersBody.innerHTML = users.map(u => `
-      <tr>
-        <td>${escapeHtml(u.name)}</td>
-        <td>${escapeHtml(u.register_number)}</td>
-        <td>${escapeHtml(u.email)}</td>
-        <td>${escapeHtml(u.college || '-')}</td>
-        <td>${escapeHtml(u.department || '-')}</td>
-        <td><span class="role-pill ${u.role === 'admin' ? 'is-admin' : ''}">${escapeHtml(u.role)}</span></td>
-        <td><b>${Number(u.cgpa || 0).toFixed(2)}</b></td>
-        <td>${u.semester_count}</td>
-        <td>
-          <div class="card-actions">
-            <button class="small-btn" onclick="viewAcademics(${u.id})">View</button>
-            <button class="small-btn" onclick="openEditUser(${u.id})">Edit</button>
-            <button class="small-btn danger" onclick="deleteUser(${u.id})">Delete</button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
   } catch (err) {
     status.textContent = err.message;
   }
 }
+
+function updateUserStats(users) {
+  document.getElementById('userCount').textContent = users.length;
+  document.getElementById('adminCount').textContent =
+    users.filter(u => u.role === 'admin').length;
+  document.getElementById('studentCount').textContent =
+    users.filter(u => u.role !== 'admin').length;
+}
+
+function populateDepartmentFilter(users) {
+  const select = document.getElementById('departmentFilter');
+  if (!select) return;
+
+  const previous = select.value;
+  const departments = [...new Set(
+    users.map(u => String(u.department || '').trim()).filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
+
+  select.innerHTML = '<option value="all">All Departments</option>' +
+    departments.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+
+  if (departments.includes(previous)) select.value = previous;
+}
+
+function getFilteredUsers() {
+  const search = String(document.getElementById('userSearch').value || '').trim().toLowerCase();
+  const role = document.getElementById('roleFilter').value;
+  const department = document.getElementById('departmentFilter').value;
+
+  return usersCache.filter(u => {
+    const matchesSearch = !search || [
+      u.name, u.register_number, u.email, u.college, u.department
+    ].some(value => String(value || '').toLowerCase().includes(search));
+
+    const matchesRole = role === 'all' || String(u.role || 'user') === role;
+    const matchesDepartment = department === 'all' ||
+      String(u.department || '').trim() === department;
+
+    return matchesSearch && matchesRole && matchesDepartment;
+  });
+}
+
+function renderUsers() {
+  const users = getFilteredUsers();
+
+  if (!users.length) {
+    usersBody.innerHTML = '<tr><td colspan="9" class="empty">No users match the current search/filter.</td></tr>';
+    document.getElementById('usersStatus').textContent = `0 of ${usersCache.length}`;
+    return;
+  }
+
+  document.getElementById('usersStatus').textContent =
+    `${users.length} of ${usersCache.length}`;
+
+  usersBody.innerHTML = users.map(u => `
+    <tr>
+      <td>${escapeHtml(u.name)}</td>
+      <td>${escapeHtml(u.register_number)}</td>
+      <td>${escapeHtml(u.email)}</td>
+      <td>${escapeHtml(u.college || '-')}</td>
+      <td>${escapeHtml(u.department || '-')}</td>
+      <td><span class="role-tag">${escapeHtml(u.role)}</span></td>
+      <td><b>${Number(u.cgpa || 0).toFixed(2)}</b></td>
+      <td>${u.semester_count}</td>
+      <td class="actions">
+        <button class="small-btn" onclick="viewAcademics(${u.id})">View</button>
+        <button class="small-btn" onclick="openEditUser(${u.id})">Edit</button>
+        <button class="small-btn danger" onclick="deleteUser(${u.id})">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('userSearch').addEventListener('input', renderUsers);
+document.getElementById('roleFilter').addEventListener('change', renderUsers);
+document.getElementById('departmentFilter').addEventListener('change', renderUsers);
+document.getElementById('clearUserFilters').addEventListener('click', () => {
+  document.getElementById('userSearch').value = '';
+  document.getElementById('roleFilter').value = 'all';
+  document.getElementById('departmentFilter').value = 'all';
+  renderUsers();
+});
 
 // ======================================================
 // ADD / EDIT USER

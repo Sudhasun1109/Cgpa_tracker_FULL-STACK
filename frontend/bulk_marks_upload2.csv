@@ -1,0 +1,39 @@
+email,semester_number,semester_name,subject_code,subject_name,credits,grade
+your_register_email,1,semester 1,BS101,MC,4,A+
+,1,semester 1,BS102,EP,3,A
+,1,semester 1,BS103,EC,3,A+
+,1,semester 1,HS101,PE,3,A
+,1,semester 1,HS102,HT,1,A
+,1,semester 1,TPS01,SS-1,1,A
+,1,semester 1,ES102,CTPS,4,A
+,1,semester 1,BS105,EC LAB,1,O
+,2,Semester 2,BS201,VCCV,4,A
+,2,Semester 2,BS206],PIS,3,A
+,2,Semester 2,ES204,FEEE,3,A
+,2,Semester 2,212,EG,2,A+
+,2,Semester 2,HS201,PE,3,A
+,2,Semester 2,TPS02,SS-2,1,A
+,2,Semester 2,207,ACPP,4,B+
+,2,Semester 2,202,TT,1,A
+,2,Semester 2,220,EP LAB,1,A+
+,2,Semester 2,MC001,EVS,0,A
+,3,semester 3,BS305,DM,4,B+
+,3,semester 3,CS301,DS,3,A
+,3,semester 3,CS302,OOP,3,A
+,3,semester 3,CS303,DBMS,3,A
+,3,semester 3,CS304,DBMS LAB,1.5,A+
+,3,semester 3,CS305,DS LAB,1.5,A+
+,3,semester 3,CS306,OOP LAB,1.5,A+
+,3,semester 3,ES301,DSD,3,A
+,3,semester 3,MC003,IC,0,A
+,3,semester 3,TPS03,QALR 1,1,A
+,4,Semester 4,BS402,PSM,4,A
+,4,Semester 4,CS401,DAA,3,B+
+,4,semester 4,CS402,OS,3,A
+,4,semester 4,CS403,CA,3,A
+,4,semester 4,CS404,AJP,4,A
+,4,semester 4,CS405,OS LAB,1.5,A
+,4,semester 4,CS406,ALG ALB,1.5,A
+,4,semester 4,HS401,TC,1,A+
+,4,semester 4,MC004,UHV 2,0,A
+,4,semester 4,TPS04,QALR 2,1,A

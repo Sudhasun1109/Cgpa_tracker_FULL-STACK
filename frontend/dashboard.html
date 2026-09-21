@@ -49,7 +49,10 @@
         <h1 id="welcome">Welcome!</h1>
         <p id="profileText"></p>
       </div>
-      <button id="addSemesterBtn" class="btn" data-no-ratelimit>+ Add Semester</button>
+      <div class="welcome-actions">
+        <button id="addSemesterBtn" class="btn" data-no-ratelimit>+ Add Semester</button>
+        <button id="bulkMarksBtn" class="btn btn-outline" data-no-ratelimit>+ Bulk Add Marks</button>
+      </div>
     </section>
 
     <section class="stats">
@@ -92,6 +95,38 @@
         <button class="btn full" type="submit">Create Semester</button>
       </form>
       <div id="modalMessage" class="message"></div>
+    </div>
+  </div>
+
+  <div id="bulkMarksModal" class="modal hidden">
+    <div class="modal-card">
+      <button class="close" id="closeBulkMarksModal">×</button>
+      <h2>Bulk Add Marks</h2>
+      <p class="hint">
+        Upload the provided <b>bulk_marks_upload2.csv</b> template.
+        Blank email cells are automatically linked to your account.
+      </p>
+      <div class="bulk-bar">
+        <a class="btn btn-outline" href="bulk_marks_upload2.csv" download>⬇ Download Template</a>
+        <input id="userBulkFile" type="file" accept=".csv">
+      </div>
+      <div id="userBulkResult" class="bulk-result"></div>
+      <button id="uploadUserBulkBtn" class="btn full" type="button">Upload Marks</button>
+    </div>
+  </div>
+
+  <div id="editSemesterModal" class="modal hidden">
+    <div class="modal-card">
+      <button class="close" id="closeEditSemesterModal">×</button>
+      <h2>Edit Semester Title</h2>
+      <form id="editSemesterForm">
+        <input type="hidden" id="editSemesterId">
+        <label>Semester Title
+          <input id="editSemesterName" placeholder="Semester 1" required maxlength="100">
+        </label>
+        <button class="btn full" type="submit">Save Title</button>
+      </form>
+      <div id="editSemesterMessage" class="message"></div>
     </div>
   </div>
 

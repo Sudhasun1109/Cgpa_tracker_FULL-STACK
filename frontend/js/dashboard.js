@@ -5,6 +5,8 @@ const modal = document.getElementById('modal');
 
 // Marksheet DOM
 const marksheetsEl = document.getElementById('marksheets');
+const bulkMarksModal = document.getElementById('bulkMarksModal');
+const editSemesterModal = document.getElementById('editSemesterModal');
 const marksheetModal = document.getElementById('marksheetModal');
 const viewerModal = document.getElementById('viewerModal');
 
@@ -33,6 +35,16 @@ document.getElementById('logoutBtn').onclick = logout;
   }
 })();
 document.getElementById('addSemesterBtn').onclick = () => modal.classList.remove('hidden');
+
+document.getElementById('bulkMarksBtn').onclick = () => {
+  document.getElementById('userBulkFile').value = '';
+  document.getElementById('userBulkResult').textContent = '';
+  document.getElementById('userBulkResult').className = 'bulk-result';
+  bulkMarksModal.classList.remove('hidden');
+};
+
+document.getElementById('closeBulkMarksModal').onclick = () => bulkMarksModal.classList.add('hidden');
+document.getElementById('closeEditSemesterModal').onclick = () => editSemesterModal.classList.add('hidden');
 document.getElementById('closeModal').onclick = () => modal.classList.add('hidden');
 
 // Marksheet modal wiring
@@ -117,6 +129,7 @@ function renderSemesters(semesters) {
       <p>${s.totalCredits} credits • ${s.subjects.length} subjects</p>
       <div class="card-actions">
         <button class="small-btn" onclick="openSemester(${s.id})">View Subjects</button>
+        <button class="small-btn" onclick="openEditSemester(${s.id})">Edit Title</button>
         <button class="small-btn" onclick="generateMarksheet(${s.id})">Generate Sheet</button>
         <button class="small-btn danger" onclick="deleteSemester(${s.id})">Delete</button>
       </div>
@@ -379,6 +392,173 @@ function generateMarksheet(semesterId) {
   win.document.write(html);
   win.document.close();
 }
+
+
+// ======================================================
+// EDIT SEMESTER TITLE
+// ======================================================
+
+function openEditSemester(id) {
+  const semester = semestersData.find(s => Number(s.id) === Number(id));
+  if (!semester) {
+    alert('Semester not found');
+    return;
+  }
+  document.getElementById('editSemesterId').value = semester.id;
+  document.getElementById('editSemesterName').value = semester.semester_name || `Semester ${semester.semester_number}`;
+  document.getElementById('editSemesterMessage').textContent = '';
+  editSemesterModal.classList.remove('hidden');
+}
+
+document.getElementById('editSemesterForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = document.getElementById('editSemesterId').value;
+  const name = document.getElementById('editSemesterName').value.trim();
+  const msg = document.getElementById('editSemesterMessage');
+
+  if (!name) {
+    msg.textContent = 'Semester title is required.';
+    return;
+  }
+
+  try {
+    await api(`/semesters/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ semesterName: name })
+    });
+    editSemesterModal.classList.add('hidden');
+    await loadDashboard();
+  } catch (err) {
+    msg.textContent = err.message;
+  }
+});
+
+// ======================================================
+// USER BULK MARKS UPLOAD
+// ======================================================
+
+function parseUserBulkCsv(text) {
+  const rows = [];
+  let field = '', record = [], inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ',') {
+      record.push(field); field = '';
+    } else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      record.push(field); field = '';
+      if (record.some(v => String(v).trim() !== '')) rows.push(record);
+      record = [];
+    } else {
+      field += c;
+    }
+  }
+  if (field !== '' || record.length) {
+    record.push(field);
+    if (record.some(v => String(v).trim() !== '')) rows.push(record);
+  }
+  return rows;
+}
+
+document.getElementById('uploadUserBulkBtn').onclick = () => {
+  const input = document.getElementById('userBulkFile');
+  const result = document.getElementById('userBulkResult');
+  const file = input.files[0];
+
+  result.className = 'bulk-result';
+
+  if (!file) {
+    result.textContent = 'Please choose bulk_marks_upload2.csv first.';
+    return;
+  }
+
+  if (!file.name.toLowerCase().endsWith('.csv')) {
+    result.textContent = 'Please upload a CSV file.';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const parsed = parseUserBulkCsv(String(reader.result));
+      if (parsed.length < 2) {
+        result.textContent = 'The CSV has no data rows.';
+        return;
+      }
+
+      const headers = parsed[0].map(h => String(h).trim().toLowerCase());
+      const required = ['email', 'semester_number', 'semester_name', 'subject_code', 'subject_name', 'credits', 'grade'];
+      const idx = Object.fromEntries(required.map(h => [h, headers.indexOf(h)]));
+
+      const missing = required.filter(h => idx[h] === -1);
+      if (missing.length) {
+        result.textContent = `Invalid template. Missing columns: ${missing.join(', ')}`;
+        return;
+      }
+
+      const currentUser = getUser();
+      if (!currentUser || !currentUser.email) {
+        result.textContent = 'Your login session is missing. Please log in again.';
+        return;
+      }
+
+      const rows = parsed.slice(1).map(cols => ({
+        // The student cannot upload marks to another account.
+        // Blank/template email values are automatically assigned to the logged-in account.
+        email: String(cols[idx.email] || '').trim() || currentUser.email,
+        semesterNumber: String(cols[idx.semester_number] || '').trim(),
+        semesterName: String(cols[idx.semester_name] || '').trim(),
+        subjectCode: String(cols[idx.subject_code] || '').trim(),
+        subjectName: String(cols[idx.subject_name] || '').trim(),
+        credits: String(cols[idx.credits] || '').trim(),
+        grade: String(cols[idx.grade] || '').trim()
+      }));
+
+      result.textContent = 'Uploading...';
+
+      const res = await api('/semesters/bulk-marks', {
+        method: 'POST',
+        body: JSON.stringify({ rows })
+      });
+
+      let html = `<div class="bulk-summary">
+        <b>${res.inserted}</b> inserted · <b>${res.failed}</b> failed · ${res.total} total
+      </div>`;
+
+      if (res.errors && res.errors.length) {
+        html += '<ul class="bulk-errors">' +
+          res.errors.map(e => `<li>Row ${e.line}: ${escapeHtml(e.message)}</li>`).join('') +
+          '</ul>';
+      }
+
+      result.className = 'bulk-result ' + (res.failed ? 'warn' : 'ok');
+      result.innerHTML = html;
+      input.value = '';
+
+      if (res.inserted > 0) await loadDashboard();
+    } catch (err) {
+      result.className = 'bulk-result warn';
+      result.textContent = err.message;
+    }
+  };
+
+  reader.onerror = () => {
+    result.className = 'bulk-result warn';
+    result.textContent = 'Could not read the CSV file.';
+  };
+
+  reader.readAsText(file);
+};
 
 document.getElementById('semesterForm').addEventListener('submit', async e => {
   e.preventDefault();
